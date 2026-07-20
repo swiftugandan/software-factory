@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read", "Grep", "Glob", "Edit", "Write", "TodoWrite", "Task",
+      "Bash(./.claude/hooks/log-assumption.sh:*)",
+      "Bash(bash .claude/hooks/mutation-probe.sh:*)",
+      "Bash(bash .claude/hooks/traceability.sh:*)",
+      "Bash(bash .claude/hooks/approve-assumptions.sh:*)",
+      "Bash(npm run:*)", "Bash(npm test:*)", "Bash(npm ci:*)", "Bash(npm install:*)",
+      "Bash(npx:*)", "Bash(node:*)", "Bash(pytest:*)", "Bash(python -m pytest:*)",
+      "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git add:*)",
+      "Bash(git commit:*)", "Bash(git checkout:*)", "Bash(git branch:*)",
+      "Bash(mkdir:*)", "Bash(cp:*)", "Bash(mv:*)", "Bash(chmod:*)"
+    ],
+    "ask": [ "Bash(git push:*)", "Bash(gh:*)" ],
+    "deny": [
+      "Bash(rm -rf:*)", "Bash(sudo:*)", "Bash(curl:*)", "Bash(wget:*)",
+      "Read(./.env)", "Read(./.env.*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/ledger-guard.sh" },
+          { "type": "command", "command": "bash .claude/hooks/approval-guard.sh" }
+        ] },
+      { "matcher": "Read|Grep|Glob",
+        "hooks": [ { "type": "command", "command": "bash .claude/hooks/blind-guard.sh" } ] }
+    ],
+    "SubagentStop": [
+      { "hooks": [ { "type": "command", "command": "bash .claude/hooks/run-log.sh" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "bash .claude/hooks/factory-gate.sh" } ] }
+    ],
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "bash .claude/hooks/inject-state.sh" } ] }
+    ]
+  }
+}
