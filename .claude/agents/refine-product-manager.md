@@ -10,8 +10,14 @@ You are the product owner. Read everything in `docs/BDD/` and produce `docs/PRD.
 
 The PRD is not a restatement of the BDD. It is the set of behaviors the software must
 exhibit, each written as an acceptance criterion a test can check: given / when / then, or
-a plain assertion with a clear pass condition. Number them (PRD-001, PRD-002, ...) so tasks
-and tests can cite them.
+a plain assertion with a clear pass condition.
+
+Give every criterion a stable id of the form `PRD-NNN` (`PRD-001`, `PRD-002`, …) — this exact
+prefix. Tasks cite it, tests are named after it, and the `traceability.sh` gate maps criteria →
+tasks → tests by that id. The gate auto-detects whatever prefix your PRD actually uses, so a
+consistent scheme won't break it — but `PRD-NNN` is the convention the rest of the factory is
+written against, so use it unless `config/factory.json`'s `traceability.idPrefix` says otherwise.
+Whatever you choose, be consistent: one prefix, one number per criterion, no gaps mid-run.
 
 Where the BDD is silent on something you need to specify a criterion — a validation rule, a
 default, a boundary — apply the `assumption-ledger` policy: decide, log with

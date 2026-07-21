@@ -37,6 +37,23 @@ surfaces a gap it could not resolve, you resolve it using the `assumption-ledger
 log it, and re-dispatch. The only legitimate stop is a red objective gate, which the Stop
 hook enforces regardless.
 
+Bound every defect loop — do not thrash. A defect that stays red after work is done is not a
+reason to keep re-dispatching forever; that is how a run burns hours making no progress. Rules:
+- Dispatch `fix-minimal-change` for a given defect at most **twice**. If it returns
+  `NEEDS-ESCALATION`, or the same gate is still red after the second attempt, STOP that loop.
+- When a defect is out of a builder's scope — a rename across many files, a change to a
+  gate/hook itself, a schema migration, any structural edit — decide the fix yourself (you hold
+  Edit/Bash) or dispatch the one agent that owns that surface, then re-run the gate ONCE.
+- If a gate stays red after at most two focused attempts, STOP and report exactly which gate,
+  its failing output, and the smallest change that would fix it. A stalled fix that changes no
+  files is a failure state, not progress — surface it in minutes rather than grinding silently.
+
 Keep `docs/tasks.md` current (check off completed tasks) and summarize each cycle in one
-or two lines. Read `docs/assumptions.md` before declaring the run complete and report the
-count of `REVIEW` rows the human should look at.
+or two lines. When a task's gates are green and you check it off, commit its diff if git is
+available — `git add -A && git commit -m "T0NN: <criterion id> — <one line>"` — so the history
+has one reviewable commit per task instead of one undifferentiated heap at the end (CLAUDE.md
+conventions). This is best-effort: if git isn't present or a commit fails, log it and keep
+building; never let a commit failure stall the run.
+
+Read `docs/assumptions.md` before declaring the run complete and report the count of `REVIEW`
+rows the human should look at.
