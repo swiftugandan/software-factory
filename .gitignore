@@ -3,3 +3,6 @@ docs/run-log.md
 # The repo is the plugin now; a local .claude/ only appears if the plugin's
 # SessionStart hook mirrors helpers while working on this repo itself.
 .claude/
+spikes/*/target/
+spikes/*/archaeology-probes/
+spikes/**/node_modules/
