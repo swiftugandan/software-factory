@@ -251,6 +251,50 @@ sed -i.bak 's/deps: M01/deps: M09/' docs/modules.md && rm -f docs/modules.md.bak
 bash .claude/hooks/program-traceability.sh >/dev/null 2>&1
 check "program-traceability fails on unknown dep (M09)" 1 $?
 
+### 13. program-guard: contracts + standing decisions are program-level artifacts
+check "program-guard blocks subagent writing docs/contracts/" 2 \
+  "$(hook program-guard.sh '{"agent_type":"build-backend","tool_input":{"file_path":"docs/contracts/001-auth.md"}}')"
+check "program-guard allows planner writing docs/contracts/" 0 \
+  "$(hook program-guard.sh '{"agent_type":"refine-program-planner","tool_input":{"file_path":"docs/contracts/001-auth.md"}}')"
+check "program-guard allows main session writing docs/contracts/" 0 \
+  "$(hook program-guard.sh '{"tool_input":{"file_path":"docs/contracts/001-auth.md"}}')"
+check "program-guard: module contract copies read-only even for planner" 2 \
+  "$(hook program-guard.sh '{"agent_type":"refine-program-planner","tool_input":{"file_path":"modules/auth/docs/BDD/contracts/001-auth.md"}}')"
+check "program-guard blocks subagent writing standing-decisions" 2 \
+  "$(hook program-guard.sh '{"agent_type":"refine-product-manager","tool_input":{"file_path":"docs/standing-decisions.md"}}')"
+check "program-guard allows main session writing standing-decisions" 0 \
+  "$(hook program-guard.sh '{"tool_input":{"file_path":"docs/standing-decisions.md"}}')"
+check "program-guard ignores unrelated paths" 0 \
+  "$(hook program-guard.sh '{"agent_type":"build-backend","tool_input":{"file_path":"src/index.js"}}')"
+
+### 14. program-traceability: plan mode, format tolerance, wave order, stale certification
+sed -i.bak 's/deps: M09/deps: M01/' docs/modules.md && rm -f docs/modules.md.bak
+rm -rf tests/integration
+bash .claude/hooks/program-traceability.sh --plan >/dev/null 2>&1
+check "program-traceability --plan passes without integration tests" 0 $?
+bash .claude/hooks/program-traceability.sh >/dev/null 2>&1
+check "program-traceability full mode still requires tests" 1 $?
+mkdir -p tests/integration && printf '// CON-001-1\n' > tests/integration/seams.test.js
+cat > docs/modules.md <<'EOF'
+- [ ] M01 auth — prefix AUTH- · wave 1 · deps: none · Contracts: 1
+EOF
+bash .claude/hooks/program-traceability.sh >/dev/null 2>&1
+check "program-traceability tolerates label case + short contract numbers" 0 $?
+cat > docs/modules.md <<'EOF'
+- [ ] M01 auth — prefix AUTH- · wave 1 · deps: none · contracts: 001
+- [ ] M02 billing — prefix BILL- · wave 1 · deps: M01 · contracts: 001
+EOF
+bash .claude/hooks/program-traceability.sh >/dev/null 2>&1
+check "program-traceability fails on same-wave dependency" 1 $?
+cat > docs/modules.md <<'EOF'
+- [x] M01 auth — prefix AUTH- · wave 1 · deps: none · contracts: 001
+EOF
+mkdir -p modules/auth/docs
+printf '001 sha256=deadbeef\n' > modules/auth/docs/certified.md
+bash .claude/hooks/program-traceability.sh >/dev/null 2>&1
+check "program-traceability voids certification against revised contract" 1 $?
+rm -rf modules
+
 echo "==== RESULTS ===="
 printf '%s' "$results"
 echo "================="

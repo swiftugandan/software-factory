@@ -209,9 +209,13 @@ module through the brownfield path (the archaeologist maps only that module).
 their own PRDs; after each wave `/integrate` proves the whole: `gate-integration-tester`
 writes tests from the program BDD and the contracts alone (the blind-guard hook keeps it
 out of every implementation), and `program-traceability.sh` checks the layer above the
-per-module gate — modules ↔ contracts ↔ guarantees ↔ integration tests. A contract defect
-is never patched inside a module: it becomes a new one-way row through approval, and the
-certification of every module citing that contract is voided until re-verified.
+per-module gate — modules ↔ contracts ↔ guarantees ↔ integration tests, including voiding
+any module certified against a contract that has since been revised (each module's
+`docs/certified.md` records the contract hashes it certified against). A contract defect
+is never patched inside a module — and that's hook-enforced, not requested: `program-guard`
+makes module-side contract copies read-only and lets only the program planner (or the
+human) revise `docs/contracts/`, the same way it reserves `docs/standing-decisions.md` for
+human-approved rows.
 
 **Decisions scale by inheritance, not repetition.** `docs/standing-decisions.md` holds
 pre-approved program-wide policies (`SD-NNN`) so recurring one-way gaps stop re-raising

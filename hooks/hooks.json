@@ -6,7 +6,8 @@
         "hooks": [
           { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/ledger-guard.sh" },
           { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/approval-guard.sh" },
-          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/spike-guard.sh" }
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/spike-guard.sh" },
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/program-guard.sh" }
         ]
       },
       {

@@ -32,8 +32,10 @@ is a contract someone must maintain and a seam integration can break on.
 never reused). A contract is a spec a blind tester can write tests from: the operations or
 messages crossing the seam with full shapes, error semantics for every operation, the
 invariants each side may assume, and versioning/compatibility expectations. Give each
-observable guarantee a stable id (`CON-NNN-M`) — the integration stage maps program
-requirements to these. What a contract deliberately leaves internal to a module, say so —
+observable guarantee a stable id `CON-NNN-M` — NNN the contract's number, M a per-contract
+sequence starting at 1 (`CON-001-1`, `CON-001-2`, …; a number is never reused after a
+revision removes it) — the integration stage maps program requirements to these and names
+tests after them. What a contract deliberately leaves internal to a module, say so —
 underspecified seams get "clarified" divergently by two builders and surface as integration
 defects months later.
 

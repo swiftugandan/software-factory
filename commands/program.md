@@ -21,7 +21,10 @@ and ask for the BDD.
 Then, in order:
 
 1. If `docs/modules.md` is absent, dispatch `refine-program-planner` → `docs/modules.md`,
-   `docs/contracts/`, and one `one-way` ledger row per boundary and contract.
+   `docs/contracts/`, and one `one-way` ledger row per boundary and contract. Then run
+   `!bash .claude/hooks/program-traceability.sh --plan` and fix anything it reports before
+   proceeding — a malformed decomposition caught now costs minutes; caught at `/integrate`
+   it costs a wave.
 2. Dispatch `refine-assumption-auditor`, then stop for `/approve-assumptions`. The
    decomposition rows are one-way, so the approval-guard blocks implementation writes until
    a human signs off — this is the same deliberate pause as ever, now guarding the most
@@ -37,9 +40,11 @@ Then, in order:
 5. Set up each module as its own factory project in wave order: `modules/<name>/` (or its
    own repo) with its own `docs/`, `config/factory.json` (with the module's
    `traceability.idPrefix` from `docs/modules.md`), and `docs/BDD/` assembled mechanically
-   from the module's row — its BDD sections plus the contracts it touches, copied read-only.
-   Symlink or copy `docs/standing-decisions.md` and `docs/adr/program/` into each module so
-   the inheritance is visible to its agents. Scope each module's gates to the module, not
+   from the module's row — its BDD sections plus the contracts it touches, copied into
+   `docs/BDD/contracts/` (the program-guard hook makes that path read-only inside the
+   module: contracts are revised at program level or not at all). Symlink or copy
+   `docs/standing-decisions.md` and `docs/adr/program/` into each module so the inheritance
+   is visible to its agents. Scope each module's gates to the module, not
    the program: its `testCommand` and `mutation.targets` cover its own code only, and in a
    monorepo with a build tool, delegate scoping to the tool's affected-graph
    (`turbo run test --filter=<module>...`, `nx affected -t test`) rather than encoding path
