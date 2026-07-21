@@ -57,6 +57,22 @@ human can flip them after the run. Read `docs/assumptions.md` before finishing.
 12. Defects loop back through `fix-minimal-change`, never a rewrite
 13. `doc-technical-writer` produces handoff docs from ADRs + ledger
 
+## Program mode — BDDs too large for one run
+
+The factory scales recursively, not bigger: never a run larger than a human can review the
+assumptions of. `/program` runs the same refine → audit → approve → spike loop one level up:
+
+- `refine-program-planner` → `docs/modules.md` (bounded-context modules, wave order,
+  per-module id prefix) + `docs/contracts/NNN-*.md` (testable seam specs). Every boundary
+  and contract is a `one-way` ledger row — decomposition goes through the approval gate.
+- The walking-skeleton spike exercises every seam before contracts become contractual;
+  `build-software-architect` then writes the inherited `docs/adr/program/` tier.
+- Each module is its own factory project (`modules/<name>/` or its own repo) run with the
+  unmodified pipeline, concurrently within a wave, sequentially across waves.
+- After each wave, `/integrate` verifies the composed system against the program BDD and
+  contracts. Contract defects are program-level: revise the contract (new one-way row),
+  re-verify every module citing it — never patch a contract locally inside a module.
+
 ## Conventions the whole factory follows
 
 - Postgres unless the BDD names a datastore. UTC everywhere. Soft deletes for user-owned rows.
