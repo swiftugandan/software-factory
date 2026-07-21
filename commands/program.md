@@ -25,15 +25,21 @@ Then, in order:
    `!bash .claude/hooks/program-traceability.sh --plan` and fix anything it reports before
    proceeding — a malformed decomposition caught now costs minutes; caught at `/integrate`
    it costs a wave.
-2. Dispatch `refine-assumption-auditor`, then stop for `/approve-assumptions`. The
-   decomposition rows are one-way, so the approval-guard blocks implementation writes until
-   a human signs off — this is the same deliberate pause as ever, now guarding the most
-   expensive decision in the program. Recurring gaps get promoted to
-   `docs/standing-decisions.md` here.
-3. Dispatch `refine-spike-engineer` for the walking-skeleton spike: stub every module and
+2. Dispatch `refine-spike-engineer` for the walking-skeleton spike: stub every module and
    pass one message across every seam exactly as its contract specifies. A contract the
    skeleton cannot exercise is REFUTED — route it back to `refine-program-planner` to revise
-   the contract (a new one-way row) before anything is built against it.
+   the contract before anything is approved against it. This deliberately inverts the
+   module pipeline's approve-then-spike order: at program level the human's attention is
+   the scarce resource and the spike budget is cheap, so the seams get exercised first and
+   the human approves with evidence in hand instead of approving twice. (Mechanically safe:
+   approval-guard blocks implementation paths while one-way rows are pending, but `spikes/`
+   is not an implementation path.) The accepted cost is spike time spent on a decomposition
+   the human may still reject.
+3. Dispatch `refine-assumption-auditor`, then stop for `/approve-assumptions`. The
+   decomposition rows are one-way, so the approval-guard blocks implementation writes until
+   a human signs off — this is the same deliberate pause as ever, now guarding the most
+   expensive decision in the program, with the skeleton's verdicts (`spike NNN`) attached to
+   the rows they verify. Recurring gaps get promoted to `docs/standing-decisions.md` here.
 4. Dispatch `build-software-architect` to write `docs/adr/program/` — the cross-cutting
    decisions (stack, error envelope, telemetry, authn) every module architect inherits and
    may not re-decide. Empirical claims cite the skeleton spike.

@@ -26,12 +26,14 @@ Skip what reality cannot answer: product-shaped questions (empty states, wording
 workflow choices) stay with the ledger and the human. Skip what's already boring and
 documented beyond doubt. Spiking everything is as wasteful as spiking nothing.
 
-Program mode: when `docs/contracts/` exists, one spike is mandatory — the walking skeleton.
-Stub every module in `docs/modules.md` and pass one message across every seam exactly as its
-contract specifies: real shapes, real error paths for at least one failure case per
-contract, no mocks of the transport under test. Each contract gets a verdict like any other
-claim; a contract the skeleton cannot exercise as written is REFUTED, and the program
-planner revises it before any module is built against it. The skeleton is still throwaway —
+Program mode: when `docs/contracts/` exists, one spike is mandatory — the walking skeleton,
+and it runs BEFORE the approval gate (unlike module-level spikes, which follow approval):
+your verdicts are the evidence the human approves the decomposition on. Stub every module
+in `docs/modules.md` and pass one message across every seam exactly as its contract
+specifies: real shapes, real error paths for at least one failure case per contract, no
+mocks of the transport under test. Each contract gets a verdict like any other claim; a
+contract the skeleton cannot exercise as written is REFUTED, and the program planner
+revises it before it reaches approval. The skeleton is still throwaway —
 it lives in `spikes/`, and no module may grow out of it.
 
 For each selected claim, run the smallest experiment that could refute it:

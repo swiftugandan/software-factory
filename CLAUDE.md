@@ -65,8 +65,10 @@ assumptions of. `/program` runs the same refine → audit → approve → spike 
 - `refine-program-planner` → `docs/modules.md` (bounded-context modules, wave order,
   per-module id prefix) + `docs/contracts/NNN-*.md` (testable seam specs). Every boundary
   and contract is a `one-way` ledger row — decomposition goes through the approval gate.
-- The walking-skeleton spike exercises every seam before contracts become contractual;
-  `build-software-architect` then writes the inherited `docs/adr/program/` tier.
+- The walking-skeleton spike exercises every seam BEFORE the approval gate (inverting the
+  module pipeline's approve-then-spike order: human attention is the scarce resource, so
+  the human approves boundaries with seam evidence in hand); `build-software-architect`
+  then writes the inherited `docs/adr/program/` tier.
 - Each module is its own factory project (`modules/<name>/` or its own repo) run with the
   unmodified pipeline, concurrently within a wave, sequentially across waves.
 - After each wave, `/integrate` verifies the composed system against the program BDD and
