@@ -6,6 +6,7 @@
       "Bash(./.claude/hooks/log-assumption.sh:*)",
       "Bash(bash .claude/hooks/mutation-probe.sh:*)",
       "Bash(bash .claude/hooks/traceability.sh:*)",
+      "Bash(bash .claude/hooks/program-traceability.sh:*)",
       "Bash(bash .claude/hooks/approve-assumptions.sh:*)",
       "Bash(npm run:*)", "Bash(npm test:*)", "Bash(npm ci:*)", "Bash(npm install:*)",
       "Bash(npx:*)", "Bash(node:*)", "Bash(pytest:*)", "Bash(python -m pytest:*)",

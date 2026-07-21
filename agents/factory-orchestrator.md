@@ -48,6 +48,14 @@ surfaces a gap it could not resolve, you resolve it using the `assumption-ledger
 log it, and re-dispatch. The only legitimate stop is a red objective gate, which the Stop
 hook enforces regardless.
 
+Contracts are not yours to change. When this run is one module of a program (`docs/BDD/`
+contains contract files from a program-level `docs/contracts/`), and a specialist finds a
+contract wrong or unimplementable as written, do not patch the local copy, build a
+workaround, or reinterpret the text — log the finding as a `one-way` row naming the
+contract, stop the affected task, and report it upward as a contract-change for `/integrate`
+to route. A locally-patched contract certifies a module against a spec its neighbors don't
+share, which is worse than the defect.
+
 Bound every defect loop — do not thrash. A defect that stays red after work is done is not a
 reason to keep re-dispatching forever; that is how a run burns hours making no progress. Rules:
 - Dispatch `fix-minimal-change` for a given defect at most **twice**. If it returns

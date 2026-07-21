@@ -47,6 +47,12 @@ check "blind-guard allows tester reading tests/" 0 \
   "$(hook blind-guard.sh '{"agent_type":"gate-adversarial-tester","tool_input":{"file_path":"tests/app.test.js"}}')"
 check "blind-guard ignores other agents on src/" 0 \
   "$(hook blind-guard.sh '{"agent_type":"build-backend","tool_input":{"file_path":"src/index.js"}}')"
+check "blind-guard blocks integration tester on module src/" 2 \
+  "$(hook blind-guard.sh '{"agent_type":"gate-integration-tester","tool_input":{"file_path":"modules/auth/src/index.js"}}')"
+check "blind-guard allows integration tester on contracts" 0 \
+  "$(hook blind-guard.sh '{"agent_type":"gate-integration-tester","tool_input":{"file_path":"docs/contracts/001-auth.md"}}')"
+check "blind-guard allows integration tester on module docs" 0 \
+  "$(hook blind-guard.sh '{"agent_type":"gate-integration-tester","tool_input":{"file_path":"modules/auth/docs/PRD.md"}}')"
 
 ### 1b. spike-guard: spike code is throwaway by contract
 check "spike-guard blocks spike engineer writing src/" 2 \
@@ -221,6 +227,29 @@ grep -q 'skipping' /tmp/probe-budget.log \
 bash .claude/hooks/mutation-probe.sh --max 6 >/tmp/probe-prog.log 2>&1
 grep -qE 'mutation-probe: \[[0-9]+/[0-9]+\]' /tmp/probe-prog.log \
   && check "mutation-probe logs per-mutant progress" 0 0 || check "mutation-probe logs per-mutant progress" 0 1
+
+### 12. program-traceability: modules ↔ contracts ↔ guarantees ↔ integration tests
+rm -rf docs/contracts tests/integration
+mkdir -p docs/contracts tests/integration
+cat > docs/modules.md <<'EOF'
+- [ ] M01 auth — prefix AUTH- · wave 1 · deps: none · contracts: 001
+- [ ] M02 billing — prefix BILL- · wave 2 · deps: M01 · contracts: 001
+EOF
+printf '# 001\nCON-001-1: opaque token\n' > docs/contracts/001-auth.md
+printf '// CON-001-1\n' > tests/integration/seams.test.js
+bash .claude/hooks/program-traceability.sh >/dev/null 2>&1
+check "program-traceability passes when fully mapped" 0 $?
+printf '// nothing\n' > tests/integration/seams.test.js
+bash .claude/hooks/program-traceability.sh >/dev/null 2>&1
+check "program-traceability fails on untested guarantee" 1 $?
+printf '// CON-001-1\n' > tests/integration/seams.test.js
+printf '# 002 no ids\n' > docs/contracts/002-orphan.md
+bash .claude/hooks/program-traceability.sh >/dev/null 2>&1
+check "program-traceability fails on orphan/id-less contract" 1 $?
+rm -f docs/contracts/002-orphan.md
+sed -i.bak 's/deps: M01/deps: M09/' docs/modules.md && rm -f docs/modules.md.bak
+bash .claude/hooks/program-traceability.sh >/dev/null 2>&1
+check "program-traceability fails on unknown dep (M09)" 1 $?
 
 echo "==== RESULTS ===="
 printf '%s' "$results"

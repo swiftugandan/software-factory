@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# PreToolUse hook on Read|Grep|Glob. The adversarial tester must write tests from the spec
-# without seeing the implementation, or its tests inherit the code's blind spots. This blocks
-# gate-adversarial-tester from reading implementation source (tests, docs, and the PRD stay
-# readable). Enforced deterministically so the guarantee doesn't rest on the model's restraint.
+# PreToolUse hook on Read|Grep|Glob. The blind testers must write tests from the spec
+# without seeing the implementation, or their tests inherit the code's blind spots. This
+# blocks gate-adversarial-tester (spec = PRD + workflows) and gate-integration-tester
+# (spec = program BDD + contracts) from reading implementation source (tests, docs, config
+# stay readable). Enforced deterministically so the guarantee doesn't rest on the model's
+# restraint.
 set -uo pipefail
 INPUT="$(cat)"
 
@@ -15,7 +17,10 @@ field() { # field <key> — pull a string value from the JSON without hard-depen
 }
 
 agent="$(field '.agent_type' agent_type)"
-[ "$agent" = "gate-adversarial-tester" ] || exit 0   # only constrains that one agent
+case "$agent" in
+  gate-adversarial-tester|gate-integration-tester) ;;  # only constrains the blind testers
+  *) exit 0 ;;
+esac
 
 path="$(field '.tool_input.file_path' file_path)"
 [ -z "$path" ] && path="$(field '.tool_input.path' path)"
@@ -28,7 +33,7 @@ case "$path" in
 esac
 case "$path" in
   src/*|*/src/*|lib/*|*/lib/*|app/*|*/app/*|server/*|client/*|api/*|packages/*)
-    echo "blind-guard: gate-adversarial-tester may not read implementation ($path). Write tests from docs/PRD.md and docs/workflows.md only. Read tests/ and docs/ freely." >&2
+    echo "blind-guard: $agent may not read implementation ($path). Write tests from the spec only — docs/PRD.md and docs/workflows.md (adversarial), or docs/BDD/ and docs/contracts/ (integration). Read tests/ and docs/ freely." >&2
     exit 2 ;;
 esac
 exit 0
