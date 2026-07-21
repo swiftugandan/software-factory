@@ -3,6 +3,8 @@
 # Non-blocking: always exit 0.
 set -uo pipefail
 INPUT="$(cat)"
+# Scoped to factory projects so a globally-enabled plugin never writes logs elsewhere.
+{ [ -d docs/BDD ] || [ -f docs/tasks.md ] || [ -f config/factory.json ]; } || exit 0
 if command -v jq >/dev/null 2>&1; then
   # NOTE: jq's `//` treats an empty string as a present value, so `.agent_type // .agent_id`
   # would log a blank name when agent_type is "". Select the first non-null, non-empty field.

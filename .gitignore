@@ -1,2 +1,5 @@
 docs/run-log.md
 /tmp/factory-*.log
+# The repo is the plugin now; a local .claude/ only appears if the plugin's
+# SessionStart hook mirrors helpers while working on this repo itself.
+.claude/

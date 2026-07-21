@@ -1,0 +1,12 @@
+{
+  "name": "software-factory",
+  "owner": { "name": "swiftugandan", "email": "swiftugandan@gmail.com" },
+  "description": "Marketplace hosting the software-factory plugin: BDD to certified software with minimal human interruption.",
+  "plugins": [
+    {
+      "name": "software-factory",
+      "source": "./",
+      "description": "Subagent pipeline that turns a Business Design Document into reviewed, tested software, logging assumptions instead of stopping to ask."
+    }
+  ]
+}

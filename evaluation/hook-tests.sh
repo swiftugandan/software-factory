@@ -4,10 +4,10 @@
 # (0 = allow, 2 = block) and on side effects. Run from anywhere.
 set -uo pipefail
 
-REPO=/home/user/software-factory
-SANDBOX="$(mktemp -d /tmp/claude-0/-home-user-software-factory/a655bb20-09fd-5cd3-bcb9-193d68c18c17/scratchpad/hooksandbox.XXXX)"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/hooksandbox.XXXX")"
 mkdir -p "$SANDBOX/.claude"
-cp -r "$REPO/.claude/hooks" "$SANDBOX/.claude/hooks"
+cp -r "$REPO/hooks" "$SANDBOX/.claude/hooks"
 cd "$SANDBOX"
 
 pass=0; fail=0; results=""
@@ -23,6 +23,18 @@ check() { # check <name> <expected_exit> <actual_exit>
 hook() { # hook <script> <json-on-stdin>
   printf '%s' "$2" | bash ".claude/hooks/$1" >/dev/null 2>&1; echo $?
 }
+
+### 0. scoping: side-effect hooks are inert outside a factory project (no docs/BDD,
+###    docs/tasks.md, or config/factory.json — the plugin may be enabled globally)
+hook ledger-guard.sh '{"tool_input":{"file_path":"src/x.js"}}' >/dev/null
+[ ! -f docs/assumptions.md ] && check "ledger-guard inert outside factory project" 0 0 \
+  || check "ledger-guard inert outside factory project" 0 1
+printf '{"agent_type":"build-backend"}' | bash .claude/hooks/run-log.sh >/dev/null 2>&1
+[ ! -f docs/run-log.md ] && check "run-log inert outside factory project" 0 0 \
+  || check "run-log inert outside factory project" 0 1
+
+# Everything below runs in an engaged factory project.
+mkdir -p docs/BDD
 
 ### 1. blind-guard: adversarial tester must not read implementation
 check "blind-guard blocks tester reading src/" 2 \

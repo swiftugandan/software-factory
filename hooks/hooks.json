@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/ledger-guard.sh" },
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/approval-guard.sh" }
+        ]
+      },
+      {
+        "matcher": "Read|Grep|Glob",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/blind-guard.sh" }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      { "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/run-log.sh" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/factory-gate.sh" } ] }
+    ],
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/inject-state.sh" } ] }
+    ]
+  }
+}

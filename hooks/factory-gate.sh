@@ -25,7 +25,7 @@ block() { echo "$1"; exit 2; }
 #    before refinement starts.
 if [ -d src ] && [ -n "$(find src -type f 2>/dev/null | head -1)" ]; then
   [ -f docs/assumptions.md ] || block \
-    "Code exists but docs/assumptions.md is missing. Log the decisions made so far with .claude/hooks/log-assumption.sh before finishing."
+    "Code exists but docs/assumptions.md is missing. Log the decisions made so far with ./.claude/hooks/log-assumption.sh before finishing."
 fi
 
 # 2) Objective gates. Run whatever the repo actually configures; skip cleanly if absent.
