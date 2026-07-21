@@ -39,7 +39,12 @@ Then, in order:
    `traceability.idPrefix` from `docs/modules.md`), and `docs/BDD/` assembled mechanically
    from the module's row — its BDD sections plus the contracts it touches, copied read-only.
    Symlink or copy `docs/standing-decisions.md` and `docs/adr/program/` into each module so
-   the inheritance is visible to its agents.
+   the inheritance is visible to its agents. Scope each module's gates to the module, not
+   the program: its `testCommand` and `mutation.targets` cover its own code only, and in a
+   monorepo with a build tool, delegate scoping to the tool's affected-graph
+   (`turbo run test --filter=<module>...`, `nx affected -t test`) rather than encoding path
+   logic in hooks — the hooks stay dumb, the tool computes what changed. The full unscoped
+   suite runs at `/integrate`, so a scoped module gate can never let the whole rot unwatched.
 6. Run `/factory` inside each module of the current wave. Modules in the same wave share no
    dependency edge — run them as separate concurrent sessions; do not interleave two module
    runs in one session. On later waves, each module run's archaeologist maps only that

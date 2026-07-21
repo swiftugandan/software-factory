@@ -58,6 +58,10 @@ Plugin installs prefix each command with `software-factory:`; copy-in installs u
 bare names.
 
 - `/factory` — the whole pipeline, BDD to certified software.
+- `/program` — program mode for BDDs too large for one run: decompose into modules +
+  contracts, gate the decomposition, then run `/factory` per module in waves.
+- `/integrate` — post-wave program verification: blind integration tests against the
+  composed system, contract traceability, contract-change routing.
 - `/refine` — refinement only (PRD, workflows, task plan). The checkpoint to review before building.
 - `/approve-assumptions` — sign off on one-way (irreversible) decisions before they're built.
 - `/build [task-id]` — build from an existing task plan.
@@ -91,6 +95,8 @@ start the pipeline, so installing into an existing repo won't touch it.
 | Drift audit | `refine-assumption-auditor` | (composite check — no single source) |
 | Reality spikes | `refine-spike-engineer` | (composite role — no single source) |
 | Brownfield map | `refine-codebase-archaeologist` | (composite role — no single source) |
+| Program decomposition | `refine-program-planner` | (composite role — no single source) |
+| Integration tests | `gate-integration-tester` | (blind contract-derived verification) |
 | Orchestration | `factory-orchestrator` | specialized/agents-orchestrator |
 | ADRs | `build-software-architect` | engineering/engineering-software-architect |
 | Backend | `build-backend` | engineering/engineering-backend-architect |
@@ -105,11 +111,12 @@ start the pipeline, so installing into an existing repo won't touch it.
 | Defect fixes | `fix-minimal-change` | engineering/engineering-minimal-change-engineer |
 | Handoff docs | `doc-technical-writer` | engineering/engineering-technical-writer |
 
-Model tiers: Fable (the top intelligence tier) for the two roles where a wrong call
-cascades irreversibly — orchestration and architecture (ADRs the builders never
-re-decide); Opus for the next rung — product refinement, the assumption audit, and
-adversarial testing; Sonnet for builders and tests; Haiku for the read-only per-diff
-gates. Tiers are aliases, not pinned IDs, so each resolves to the current model in
+Model tiers: Fable (the top intelligence tier) for the roles where a wrong call
+cascades irreversibly — orchestration, architecture (ADRs the builders never
+re-decide), and program decomposition (module boundaries nothing downstream can undo);
+Opus for the next rung — product refinement, the assumption audit, and
+adversarial/integration testing; Sonnet for builders and tests; Haiku for the read-only
+per-diff gates. Tiers are aliases, not pinned IDs, so each resolves to the current model in
 that tier as new versions ship. Read-only gates carry `disallowedTools:
 Write, Edit` so a reviewer cannot rewrite the thing it is reviewing.
 
@@ -177,6 +184,45 @@ fact. For fully autonomous runs, set `assumptions.autoApproveOneWay: true` in
 `config/factory.json` — the trade is explicit.
 
 Tune thresholds and the autonomy switch in `config/factory.json`.
+
+## Scaling to large programs — many small runs, not one big one
+
+The factory scales recursively: never a run larger than a human can review the assumptions
+of. `/program` applies the same refine → audit → approve → spike loop one level up, and the
+unmodified factory runs per module underneath it.
+
+**Decomposition goes through the gate, not around it.** `refine-program-planner` splits the
+BDD into bounded-context modules (`docs/modules.md`) and blind-testable seam contracts
+(`docs/contracts/NNN-*.md`) — and logs every boundary and contract as a `one-way` ledger
+row. Module boundaries are the most expensive irreversible decision in a program, so they
+get the same human sign-off as any other one-way call, then a mandatory walking-skeleton
+spike passes one message across every seam before the contracts become contractual.
+
+**Modules run the ordinary pipeline.** Each module is its own factory project
+(`modules/<name>/` or its own repo) with its own PRD, ledger, gates, and a unique
+`traceability.idPrefix`. Modules in the same wave share no dependency edge and run as
+separate concurrent sessions — parallelism comes from independent runs, not from
+parallelizing inside one run, so the ledger and run-log never race. Later waves enter each
+module through the brownfield path (the archaeologist maps only that module).
+
+**Recomposition is verified, not assumed.** Module certification proves the parts against
+their own PRDs; after each wave `/integrate` proves the whole: `gate-integration-tester`
+writes tests from the program BDD and the contracts alone (the blind-guard hook keeps it
+out of every implementation), and `program-traceability.sh` checks the layer above the
+per-module gate — modules ↔ contracts ↔ guarantees ↔ integration tests. A contract defect
+is never patched inside a module: it becomes a new one-way row through approval, and the
+certification of every module citing that contract is voided until re-verified.
+
+**Decisions scale by inheritance, not repetition.** `docs/standing-decisions.md` holds
+pre-approved program-wide policies (`SD-NNN`) so recurring one-way gaps stop re-raising
+approval — the human signs a policy once instead of the same instance forty times.
+`docs/adr/program/` is the inherited ADR tier: module architects cite it and may narrow but
+never contradict it — the builders-don't-re-decide rule, one level up.
+
+**Gates stay fast by delegation.** Each module's `testCommand` and `mutation.targets` are
+scoped to the module; in a monorepo, scoping is delegated to the build tool's affected
+graph (`turbo run test --filter=…`, `nx affected -t test`) instead of path logic in hooks.
+The full unscoped suite runs at `/integrate`, so nothing rots unwatched.
 
 ## The deliverable that replaces the meetings
 
