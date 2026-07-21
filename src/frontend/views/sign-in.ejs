@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in - TinyLink</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <main class="page page-sign-in">
+    <h1>Sign in to TinyLink</h1>
+
+    <% if (error) { %>
+      <p class="error" role="alert" data-testid="sign-in-error"><%= error %></p>
+    <% } %>
+
+    <form method="POST" action="/app/sign-in" data-testid="sign-in-form">
+      <input type="hidden" name="next" value="<%= next %>">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" name="email" value="<%= email %>" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" name="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" data-testid="sign-in-submit">Sign in</button>
+    </form>
+
+    <p class="oauth">
+      <a href="/auth/oauth/google" data-testid="oauth-google-button">Sign in with Google</a>
+    </p>
+  </main>
+</body>
+</html>

@@ -2,5 +2,5 @@
   "mutation":    { "threshold": 0.8, "maxMutants": 20, "targets": ["src", "lib", "app"] },
   "coverage":    { "threshold": 0.7 },
   "assumptions": { "autoApproveOneWay": false },
-  "testCommand": ""
+  "testCommand": "node --test --test-concurrency=1 \"tests/**/*.test.js\""
 }

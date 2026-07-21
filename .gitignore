@@ -1,2 +1,11 @@
 docs/run-log.md
 /tmp/factory-*.log
+
+# T001/ADR-0013: dependencies and local-only secrets
+node_modules/
+.env
+.env.*
+!.env.example
+coverage/
+*.log
+npm-debug.log*
