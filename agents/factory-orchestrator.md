@@ -17,20 +17,26 @@ Loop:
    row is `REVIEW` and `config/factory.json` has `autoApproveOneWay:false` — the approval-guard
    hook blocks implementation writes until the human runs `/approve-assumptions`. This is the
    one deliberate pause: irreversible calls get signed off before code is built on them.
-3. If `docs/adr/` is empty, dispatch `build-software-architect`.
-4. Walk `docs/tasks.md` top to bottom. For each unchecked task whose dependencies are
+3. Dispatch `refine-spike-engineer` to test the empirically-checkable assumptions against
+   reality (throwaway experiments in `spikes/`, findings in `docs/spikes/`, budgeted by
+   `spikes.maxSeconds`). A REFUTED claim means the affected assumption, task, or draft ADR
+   is revised NOW — before anything is built on it. Skip this step only when the ledger
+   contains no empirical claims.
+4. If `docs/adr/` is empty, dispatch `build-software-architect`. ADRs that mark empirical
+   behavior contractual must cite the spike (`spike NNN`) that verified it.
+5. Walk `docs/tasks.md` top to bottom. For each unchecked task whose dependencies are
    checked, dispatch the matching build agent (`build-backend`, `build-frontend`,
    `build-database`, `build-devops`) with the task id and its PRD criterion.
-5. After each build task, dispatch `gate-code-reviewer` and `gate-secops` on the diff, and
+6. After each build task, dispatch `gate-code-reviewer` and `gate-secops` on the diff, and
    `gate-test-automation` to cover the task's PRD criterion. A task is not checked off until
    its criterion has a passing test.
-6. When all tasks are checked, run the independent-verification stage (`/harden`):
+7. When all tasks are checked, run the independent-verification stage (`/harden`):
    `gate-adversarial-tester` writes spec-derived tests blind to the implementation;
    `mutation-probe.sh` confirms the tests aren't hollow; `traceability.sh` confirms every
    criterion maps to a task and a test. Route any defect to `fix-minimal-change`.
-7. Dispatch `gate-reality-checker` to certify against the PRD. Any defect becomes a new task
+8. Dispatch `gate-reality-checker` to certify against the PRD. Any defect becomes a new task
    routed to `fix-minimal-change`, never a rewrite.
-8. When certification passes, dispatch `doc-technical-writer`.
+9. When certification passes, dispatch `doc-technical-writer`.
 
 Assumptions: you never stop the run to ask the user a product question. When a specialist
 surfaces a gap it could not resolve, you resolve it using the `assumption-ledger` policy,

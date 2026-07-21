@@ -89,6 +89,7 @@ start the pipeline, so installing into an existing repo won't touch it.
 | Path mapping | `refine-workflow-architect` | specialized/specialized-workflow-architect |
 | Task graph | `refine-task-planner` | project-management/project-manager-senior |
 | Drift audit | `refine-assumption-auditor` | (composite check — no single source) |
+| Reality spikes | `refine-spike-engineer` | (composite role — no single source) |
 | Orchestration | `factory-orchestrator` | specialized/agents-orchestrator |
 | ADRs | `build-software-architect` | engineering/engineering-software-architect |
 | Backend | `build-backend` | engineering/engineering-backend-architect |
@@ -149,6 +150,15 @@ threshold in `config/factory.json` (default 0.8). No external mutation tool requ
 `traceability.sh` verifies every `PRD-NNN` maps to a task and to a named test, and that no
 task cites a criterion that doesn't exist. This catches the slow drift where many
 locally-reasonable steps build a coherent product that no longer matches the spec.
+
+`refine-spike-engineer` attacks the problem from the front instead: before the ADRs commit
+to any empirically-checkable claim — how a library behaves, what a platform actually does —
+it runs the smallest throwaway experiment that could refute it (`spikes/`, findings in
+`docs/spikes/`, ledger rows re-based on `spike NNN`). Refinement otherwise runs entirely on
+priors, and an unverified prior that reaches a "contractual" ADR becomes a defect a builder
+faithfully implements. The `spike-guard` hook makes spike code throwaway by contract:
+implementation files cannot reference `spikes/`, and the spike engineer cannot write product
+code. Budget and the (default-off) network switch live in `config/factory.json` (`spikes.*`).
 
 ## The approval gate — human sign-off where it's irreversible
 

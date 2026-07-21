@@ -3,5 +3,6 @@
   "coverage":     { "threshold": 0.7 },
   "traceability": { "idPrefix": "" },
   "assumptions":  { "autoApproveOneWay": false },
+  "spikes":       { "maxSeconds": 600, "allowNetwork": false },
   "testCommand":  ""
 }

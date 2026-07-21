@@ -48,6 +48,20 @@ check "blind-guard allows tester reading tests/" 0 \
 check "blind-guard ignores other agents on src/" 0 \
   "$(hook blind-guard.sh '{"agent_type":"build-backend","tool_input":{"file_path":"src/index.js"}}')"
 
+### 1b. spike-guard: spike code is throwaway by contract
+check "spike-guard blocks spike engineer writing src/" 2 \
+  "$(hook spike-guard.sh '{"agent_type":"refine-spike-engineer","tool_input":{"file_path":"src/index.ts","content":"export const x = 1"}}')"
+check "spike-guard allows spike engineer writing spikes/" 0 \
+  "$(hook spike-guard.sh '{"agent_type":"refine-spike-engineer","tool_input":{"file_path":"spikes/001-ajv-coercion/probe.ts","content":"..."}}')"
+check "spike-guard allows spike engineer writing docs/spikes/" 0 \
+  "$(hook spike-guard.sh '{"agent_type":"refine-spike-engineer","tool_input":{"file_path":"docs/spikes/001-ajv-coercion.md","content":"..."}}')"
+check "spike-guard blocks src/ importing from spikes/" 2 \
+  "$(hook spike-guard.sh '{"agent_type":"build-backend","tool_input":{"file_path":"src/app.ts","content":"import { probe } from \"../spikes/001/probe.js\";"}}')"
+check "spike-guard allows clean src/ writes" 0 \
+  "$(hook spike-guard.sh '{"agent_type":"build-backend","tool_input":{"file_path":"src/app.ts","content":"export const clean = true;"}}')"
+check "spike-guard allows builders writing tests/" 0 \
+  "$(hook spike-guard.sh '{"agent_type":"gate-test-automation","tool_input":{"file_path":"tests/app.test.ts","content":"it(\"works\")"}}')"
+
 ### 2. ledger-guard: creates the ledger so agents always have somewhere to log
 rm -f docs/assumptions.md
 hook ledger-guard.sh '{"tool_input":{"file_path":"src/x.js"}}' >/dev/null
