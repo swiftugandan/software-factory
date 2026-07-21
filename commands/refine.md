@@ -7,6 +7,9 @@ model: opus
 
 Refine the inputs in `docs/BDD/` without building anything yet. Scope note: $ARGUMENTS
 
+If `.claude/hooks/log-assumption.sh` is missing, first run
+`bash "${CLAUDE_PLUGIN_ROOT}/hooks/sync-project.sh"` so assumption logging works.
+
 Dispatch in order: `refine-product-manager` → `refine-workflow-architect` →
 `refine-task-planner`. Each reads the prior output. Resolve gaps via the `assumption-ledger`
 policy and log them.

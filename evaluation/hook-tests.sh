@@ -4,10 +4,10 @@
 # (0 = allow, 2 = block) and on side effects. Run from anywhere.
 set -uo pipefail
 
-REPO=/home/user/software-factory
-SANDBOX="$(mktemp -d /tmp/claude-0/-home-user-software-factory/a655bb20-09fd-5cd3-bcb9-193d68c18c17/scratchpad/hooksandbox.XXXX)"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/hooksandbox.XXXX")"
 mkdir -p "$SANDBOX/.claude"
-cp -r "$REPO/.claude/hooks" "$SANDBOX/.claude/hooks"
+cp -r "$REPO/hooks" "$SANDBOX/.claude/hooks"
 cd "$SANDBOX"
 
 pass=0; fail=0; results=""
@@ -24,6 +24,18 @@ hook() { # hook <script> <json-on-stdin>
   printf '%s' "$2" | bash ".claude/hooks/$1" >/dev/null 2>&1; echo $?
 }
 
+### 0. scoping: side-effect hooks are inert outside a factory project (no docs/BDD,
+###    docs/tasks.md, or config/factory.json — the plugin may be enabled globally)
+hook ledger-guard.sh '{"tool_input":{"file_path":"src/x.js"}}' >/dev/null
+[ ! -f docs/assumptions.md ] && check "ledger-guard inert outside factory project" 0 0 \
+  || check "ledger-guard inert outside factory project" 0 1
+printf '{"agent_type":"build-backend"}' | bash .claude/hooks/run-log.sh >/dev/null 2>&1
+[ ! -f docs/run-log.md ] && check "run-log inert outside factory project" 0 0 \
+  || check "run-log inert outside factory project" 0 1
+
+# Everything below runs in an engaged factory project.
+mkdir -p docs/BDD
+
 ### 1. blind-guard: adversarial tester must not read implementation
 check "blind-guard blocks tester reading src/" 2 \
   "$(hook blind-guard.sh '{"agent_type":"gate-adversarial-tester","tool_input":{"file_path":"src/index.js"}}')"
@@ -35,6 +47,24 @@ check "blind-guard allows tester reading tests/" 0 \
   "$(hook blind-guard.sh '{"agent_type":"gate-adversarial-tester","tool_input":{"file_path":"tests/app.test.js"}}')"
 check "blind-guard ignores other agents on src/" 0 \
   "$(hook blind-guard.sh '{"agent_type":"build-backend","tool_input":{"file_path":"src/index.js"}}')"
+
+### 1b. spike-guard: spike code is throwaway by contract
+check "spike-guard blocks spike engineer writing src/" 2 \
+  "$(hook spike-guard.sh '{"agent_type":"refine-spike-engineer","tool_input":{"file_path":"src/index.ts","content":"export const x = 1"}}')"
+check "spike-guard allows spike engineer writing spikes/" 0 \
+  "$(hook spike-guard.sh '{"agent_type":"refine-spike-engineer","tool_input":{"file_path":"spikes/001-ajv-coercion/probe.ts","content":"..."}}')"
+check "spike-guard allows spike engineer writing docs/spikes/" 0 \
+  "$(hook spike-guard.sh '{"agent_type":"refine-spike-engineer","tool_input":{"file_path":"docs/spikes/001-ajv-coercion.md","content":"..."}}')"
+check "spike-guard blocks src/ importing from spikes/" 2 \
+  "$(hook spike-guard.sh '{"agent_type":"build-backend","tool_input":{"file_path":"src/app.ts","content":"import { probe } from \"../spikes/001/probe.js\";"}}')"
+check "spike-guard allows clean src/ writes" 0 \
+  "$(hook spike-guard.sh '{"agent_type":"build-backend","tool_input":{"file_path":"src/app.ts","content":"export const clean = true;"}}')"
+check "spike-guard allows builders writing tests/" 0 \
+  "$(hook spike-guard.sh '{"agent_type":"gate-test-automation","tool_input":{"file_path":"tests/app.test.ts","content":"it(\"works\")"}}')"
+check "spike-guard blocks archaeologist writing src/" 2 \
+  "$(hook spike-guard.sh '{"agent_type":"refine-codebase-archaeologist","tool_input":{"file_path":"src/index.ts","content":"export {}"}}')"
+check "spike-guard allows archaeologist writing docs/ + probes" 0 \
+  "$(hook spike-guard.sh '{"agent_type":"refine-codebase-archaeologist","tool_input":{"file_path":"docs/current-state.md","content":"# map"}}')"
 
 ### 2. ledger-guard: creates the ledger so agents always have somewhere to log
 rm -f docs/assumptions.md

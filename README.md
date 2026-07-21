@@ -7,32 +7,55 @@ each subagent here maps to one of those roles and is wired for Claude Code.
 
 ## Point a project at the factory
 
-From inside any project — new (`git init && cd` into it) or existing — run:
+This repo is a Claude Code **plugin** (and its own marketplace). From any Claude Code
+session, once:
+
+```
+/plugin marketplace add swiftugandan/software-factory
+/plugin install software-factory@software-factory
+```
+
+Then, inside any project — new (`git init && cd` into it) or existing:
+
+```
+/software-factory:setup
+```
+
+That creates `docs/BDD/`, copies the default `config/factory.json`, mirrors the helper
+scripts into `.claude/hooks/`, and runs preflight. Drop your BDD and supporting docs into
+`docs/BDD/`, then run `/software-factory:factory`. The plugin's guard hooks (approval,
+blind-tester, ledger, Stop gate) come with the install and stay inert in projects that
+don't use the factory. `/plugin update software-factory` pulls the latest — the plugin
+intentionally omits a semver pin, so every commit to this repo is an updatable version.
+
+### Copy-in install (alternative)
+
+If you'd rather vendor the factory into the project (no plugin, files in git, plus the
+hands-off permissions preset — see below):
 
 ```
 curl -fsSL https://raw.githubusercontent.com/swiftugandan/software-factory/main/install.sh | bash
 ```
 
-The installer fetches this repo, copies `.claude/` + `CLAUDE.md` + `config/factory.json` in,
-and runs preflight. It is safe on existing projects: a project's own `CLAUDE.md` is kept
-(the factory's is imported via `CLAUDE.factory.md`) and a pre-existing `.claude/settings.json`
-is saved as `settings.json.pre-factory` before the factory's hooks take over. Re-run the same
-one-liner any time to update to the latest factory. To pin a version or fork:
-
-```
-curl -fsSL https://raw.githubusercontent.com/swiftugandan/software-factory/main/install.sh \
-  | FACTORY_REF=main FACTORY_REPO=swiftugandan/software-factory bash
-```
-
-From a local clone of this repo, `./install.sh /path/to/your/repo` does the same thing.
-Or copy `.claude/` and `CLAUDE.md` in by hand and run `bash .claude/hooks/doctor.sh`.
-Then drop your BDD and supporting docs into `docs/BDD/`, open Claude Code, and run `/factory`.
+The installer fetches this repo and copies `agents/`, `commands/`, `skills/`, and
+`hooks/` into the project's `.claude/`, plus `CLAUDE.md` and `config/factory.json`, then
+runs preflight. It is safe on existing projects: a project's own `CLAUDE.md` is kept (the
+factory's is imported via `CLAUDE.factory.md`) and a pre-existing `.claude/settings.json`
+is saved as `settings.json.pre-factory` before the factory's hooks take over. Re-run the
+same one-liner any time to update. Pin a version or fork with
+`FACTORY_REF=<branch-or-tag> FACTORY_REPO=<owner/name>` before the `bash`. From a local
+clone, `./install.sh /path/to/your/repo` does the same thing. Commands are un-namespaced
+in this mode (`/factory`, not `/software-factory:factory`) — don't run both modes in one
+project or the gates fire twice.
 
 `jq` is recommended (the standard hook dependency; scripts degrade without it but are less
 precise). Node and git are needed only if you build a JS project and want commit-per-task.
 The preflight tells you what's missing.
 
 ## Run
+
+Plugin installs prefix each command with `software-factory:`; copy-in installs use the
+bare names.
 
 - `/factory` — the whole pipeline, BDD to certified software.
 - `/refine` — refinement only (PRD, workflows, task plan). The checkpoint to review before building.
@@ -41,18 +64,22 @@ The preflight tells you what's missing.
 - `/harden` — independent verification: adversarial tests, mutation probe, traceability.
 - `/certify` — certify against the PRD and write handoff docs.
 - `/assumptions` — read the ledger, one-way decisions first.
+- `/setup` — bootstrap the current project (plugin installs only).
 
 Try it against the bundled example: `cp examples/BDD-link-shortener.md docs/BDD/` then `/factory`.
 
-Hands-off operation is the default. `settings.json` ships with `defaultMode: acceptEdits`
-and an allow-list covering every command the pipeline runs (npm/pytest/node/git plus the
-ledger helper), so an unattended run doesn't stall on approvals. `git push` and `gh` still
-prompt; `rm -rf`, `sudo`, `curl`, `wget`, and reading `.env` are denied. For a fully headless
+Hands-off operation: `templates/settings.json` ships `defaultMode: acceptEdits` and an
+allow-list covering every command the pipeline runs (npm/pytest/node/git plus the ledger
+helper), so an unattended run doesn't stall on approvals. `git push` and `gh` still
+prompt; `rm -rf`, `sudo`, `curl`, `wget`, and reading `.env` are denied. The copy-in
+installer applies it as the project's `.claude/settings.json`; plugins cannot ship a
+permissions policy, so plugin users get it by running `/software-factory:setup hands-off`
+(which merges only the `permissions` block into project settings). For a fully headless
 run: `claude -p "/factory" --permission-mode acceptEdits`.
 
-Two things to expect on first use: Claude Code asks you to trust the project's hooks once
-(they run shell commands — inspect `.claude/hooks/` first), and the Stop gate stays inert
-until you actually start the pipeline, so installing into an existing repo won't touch it.
+Two things to expect on first use: Claude Code asks you to trust hooks once (they run
+shell commands — inspect `hooks/` first), and the Stop gate stays inert until you actually
+start the pipeline, so installing into an existing repo won't touch it.
 
 ## How the pipeline maps to agency-agents
 
@@ -62,6 +89,8 @@ until you actually start the pipeline, so installing into an existing repo won't
 | Path mapping | `refine-workflow-architect` | specialized/specialized-workflow-architect |
 | Task graph | `refine-task-planner` | project-management/project-manager-senior |
 | Drift audit | `refine-assumption-auditor` | (composite check — no single source) |
+| Reality spikes | `refine-spike-engineer` | (composite role — no single source) |
+| Brownfield map | `refine-codebase-archaeologist` | (composite role — no single source) |
 | Orchestration | `factory-orchestrator` | specialized/agents-orchestrator |
 | ADRs | `build-software-architect` | engineering/engineering-software-architect |
 | Backend | `build-backend` | engineering/engineering-backend-architect |
@@ -82,13 +111,15 @@ Write, Edit` so a reviewer cannot rewrite the thing it is reviewing.
 
 ## What makes it autonomous
 
-The `assumption-ledger` skill (`.claude/skills/assumption-ledger/`) is preloaded into every
+The `assumption-ledger` skill (`skills/assumption-ledger/`) is preloaded into every
 agent that faces gaps. It classifies each gap as reversible-with-a-default, product-shaped,
 or irreversible, and says what to do with each. Agents log decisions with
-`.claude/hooks/log-assumption.sh`, which writes a structured row to `docs/assumptions.md`.
+`.claude/hooks/log-assumption.sh` (mirrored into the project by the plugin's SessionStart
+hook, or copied in by the installer), which writes a structured row to `docs/assumptions.md`.
 One-way decisions land behind a config flag or interface and are flagged `REVIEW`.
 
-Determinism the model cannot override lives in the hooks (`.claude/settings.json`):
+Determinism the model cannot override lives in the hooks (`hooks/hooks.json` for the
+plugin; the same wiring via `templates/settings.json` for copy-in installs):
 
 - **PreToolUse** on writes guarantees the ledger file exists.
 - **SubagentStop** appends a run trail to `docs/run-log.md`.
@@ -120,6 +151,15 @@ threshold in `config/factory.json` (default 0.8). No external mutation tool requ
 `traceability.sh` verifies every `PRD-NNN` maps to a task and to a named test, and that no
 task cites a criterion that doesn't exist. This catches the slow drift where many
 locally-reasonable steps build a coherent product that no longer matches the spec.
+
+`refine-spike-engineer` attacks the problem from the front instead: before the ADRs commit
+to any empirically-checkable claim — how a library behaves, what a platform actually does —
+it runs the smallest throwaway experiment that could refute it (`spikes/`, findings in
+`docs/spikes/`, ledger rows re-based on `spike NNN`). Refinement otherwise runs entirely on
+priors, and an unverified prior that reaches a "contractual" ADR becomes a defect a builder
+faithfully implements. The `spike-guard` hook makes spike code throwaway by contract:
+implementation files cannot reference `spikes/`, and the spike engineer cannot write product
+code. Budget and the (default-off) network switch live in `config/factory.json` (`spikes.*`).
 
 ## The approval gate — human sign-off where it's irreversible
 

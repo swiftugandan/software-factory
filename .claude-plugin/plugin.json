@@ -1,0 +1,11 @@
+{
+  "name": "software-factory",
+  "displayName": "Software Factory",
+  "description": "Turns a Business Design Document into reviewed, tested software: a subagent pipeline with assumption logging, deterministic gate hooks, and independent verification.",
+  "author": { "name": "swiftugandan", "email": "swiftugandan@gmail.com" },
+  "homepage": "https://github.com/swiftugandan/software-factory",
+  "repository": "https://github.com/swiftugandan/software-factory",
+  "license": "MIT",
+  "keywords": ["factory", "bdd", "pipeline", "subagents", "assumptions", "gates"],
+  "hooks": "./hooks/hooks.json"
+}

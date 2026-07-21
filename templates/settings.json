@@ -24,7 +24,8 @@
       { "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           { "type": "command", "command": "bash .claude/hooks/ledger-guard.sh" },
-          { "type": "command", "command": "bash .claude/hooks/approval-guard.sh" }
+          { "type": "command", "command": "bash .claude/hooks/approval-guard.sh" },
+          { "type": "command", "command": "bash .claude/hooks/spike-guard.sh" }
         ] },
       { "matcher": "Read|Grep|Glob",
         "hooks": [ { "type": "command", "command": "bash .claude/hooks/blind-guard.sh" } ] }

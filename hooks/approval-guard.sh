@@ -35,7 +35,7 @@ case "$path" in
 esac
 case "$path" in
   src/*|*/src/*|lib/*|*/lib/*|app/*|*/app/*|server/*|client/*|api/*|packages/*)
-    echo "approval-guard: $pending one-way assumption(s) still marked REVIEW. These are irreversible calls that need a human decision before code is built on them. Run /approve-assumptions (or set assumptions.autoApproveOneWay=true in config/factory.json to build anyway)." >&2
+    echo "approval-guard: $pending one-way assumption(s) still marked REVIEW. These are irreversible calls that need a human decision before code is built on them. Run /approve-assumptions (plugin: /software-factory:approve-assumptions), or set assumptions.autoApproveOneWay=true in config/factory.json to build anyway." >&2
     exit 2 ;;
 esac
 exit 0
