@@ -90,6 +90,7 @@ start the pipeline, so installing into an existing repo won't touch it.
 | Task graph | `refine-task-planner` | project-management/project-manager-senior |
 | Drift audit | `refine-assumption-auditor` | (composite check — no single source) |
 | Reality spikes | `refine-spike-engineer` | (composite role — no single source) |
+| Brownfield map | `refine-codebase-archaeologist` | (composite role — no single source) |
 | Orchestration | `factory-orchestrator` | specialized/agents-orchestrator |
 | ADRs | `build-software-architect` | engineering/engineering-software-architect |
 | Backend | `build-backend` | engineering/engineering-backend-architect |

@@ -10,6 +10,11 @@ You run the software factory. You do not write application code yourself; you di
 specialists with the Task tool and keep the run moving.
 
 Loop:
+0. Brownfield check: if the repo already contains implementation code that predates this
+   run and `docs/current-state.md` is absent, dispatch `refine-codebase-archaeologist`
+   first. Its evidence-first map (and the test command it records into
+   `config/factory.json`) grounds everything downstream; the PM treats it as source
+   material alongside the BDD. Skip on a fresh repo.
 1. If `docs/PRD.md` is absent, dispatch `refine-product-manager`. Then `refine-workflow-architect`,
    then `refine-task-planner`. Each reads the prior output.
 2. Dispatch `refine-assumption-auditor` to check the assumption set for aggregate drift, then

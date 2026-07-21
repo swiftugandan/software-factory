@@ -3,8 +3,9 @@
 # contract is enforced two ways:
 #   (a) implementation files may not reference spikes/ — experiments cannot ooze into the
 #       product via an import or require;
-#   (b) refine-spike-engineer writes only inside spikes/, docs/, and config/ — the agent
-#       that runs experiments cannot touch the product.
+#   (b) refine-spike-engineer and refine-codebase-archaeologist write only inside
+#       spikes/, docs/, and config/ — the agents that run experiments and map existing
+#       code cannot touch the product.
 # Deterministic, like blind-guard: the guarantee doesn't rest on the model's restraint.
 set -uo pipefail
 INPUT="$(cat)"
@@ -21,16 +22,16 @@ agent="$(field '.agent_type' agent_type)"
 path="$(field '.tool_input.file_path' file_path)"
 [ -z "$path" ] && exit 0
 
-# (b) Containment: the spike engineer stays in its sandbox.
-if [ "$agent" = "refine-spike-engineer" ]; then
+# (b) Containment: the experimenting/mapping agents stay in their sandbox.
+case "$agent" in refine-spike-engineer|refine-codebase-archaeologist)
   case "$path" in
     spikes/*|*/spikes/*|docs/*|*/docs/*|config/*|*/config/*) exit 0 ;;
     src/*|*/src/*|lib/*|*/lib/*|app/*|*/app/*|server/*|client/*|api/*|packages/*|tests/*|*/tests/*|test/*|*/test/*)
-      echo "spike-guard: refine-spike-engineer writes only under spikes/, docs/, and config/ ($path is product code). Record findings in docs/spikes/ and the ledger; builders act on them." >&2
+      echo "spike-guard: $agent writes only under spikes/, docs/, and config/ ($path is product code). Record findings in docs/ and the ledger; builders act on them." >&2
       exit 2 ;;
     *) exit 0 ;;
   esac
-fi
+esac
 
 # (a) No spike references in implementation code.
 case "$path" in

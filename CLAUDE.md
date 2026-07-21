@@ -33,7 +33,11 @@ human can flip them after the run. Read `docs/assumptions.md` before finishing.
 
 ## Pipeline order
 
-1. `refine-product-manager` → `docs/PRD.md` (acceptance criteria, one per testable behavior)
+0. Brownfield only: `refine-codebase-archaeologist` → `docs/current-state.md` (evidence-first
+   map of the existing code: public contracts, de-facto spec from tests, conventions,
+   landmines — every claim cited or labeled inference; validated by spike 001)
+1. `refine-product-manager` → `docs/PRD.md` (acceptance criteria, one per testable behavior;
+   on brownfield, reads current-state alongside the BDD)
 2. `refine-workflow-architect` → `docs/workflows.md` (every path, including error/empty/permission states)
 3. `refine-task-planner` → `docs/tasks.md` (dependency-ordered checklist, each task cites a PRD criterion)
 4. `refine-assumption-auditor` → `docs/assumption-audit.md`, then the approval checkpoint:
