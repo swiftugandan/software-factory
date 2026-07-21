@@ -64,10 +64,21 @@ human can flip them after the run. Read `docs/assumptions.md` before finishing.
 - Every irreversible choice lands behind a flag in `config/` or an interface, never inline.
 - Tasks are done when their PRD criterion has a passing test AND the reality checker signs off.
 - Commits reference the task id and PRD criterion. No scope beyond the task in the diff.
+- `docs/standing-decisions.md`, when present, holds pre-approved program-wide decisions
+  (`SD-NNN`). A gap it covers is already decided: follow it, log `cheap` citing the row,
+  never re-raise it for approval.
+- ADRs in `docs/adr/program/` are inherited cross-cutting decisions. Module architects cite
+  them and may narrow but never contradict them — the builders-don't-re-decide rule, one
+  level up.
+- Multi-module programs pin `traceability.idPrefix` per module in that module's
+  `config/factory.json` (`AUTH-`, `BILL-`, …) so criterion ids never collide and per-module
+  traceability can roll up program-wide.
 
 ## What lives where
 
 - `docs/PRD.md`, `docs/workflows.md`, `docs/tasks.md`, `docs/adr/` — refinement outputs
+- `docs/standing-decisions.md` — pre-approved program-wide defaults (optional; scale runs)
+- `docs/adr/program/` — inherited cross-cutting ADRs modules may not re-decide (optional)
 - `spikes/` (throwaway experiments, never imported by src/) and `docs/spikes/` (their findings)
 - `docs/assumptions.md` — the ledger (the deliverable that replaces stakeholder meetings)
 - `docs/run-log.md` — appended by the SubagentStop hook; observability for the run

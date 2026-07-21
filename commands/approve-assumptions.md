@@ -18,3 +18,8 @@ Then act on the user's decision with
 `--approve-all`. Until pending one-way rows are cleared (or autoApproveOneWay is set), the
 approval-guard hook blocks writes to implementation paths — so this is the gate that lets the
 build proceed.
+
+When a row (or its `--basis`) notes the same one-way gap recurring across runs or modules,
+offer to promote the approved decision to `docs/standing-decisions.md` as an `SD-NNN` row
+(decision, scope, rationale, date). Future runs then follow it without re-raising approval —
+one signed-off policy instead of the same instance forty times.

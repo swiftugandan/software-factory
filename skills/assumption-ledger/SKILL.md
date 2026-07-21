@@ -8,6 +8,18 @@ description: "The decision policy for resolving gaps in source docs without stop
 A gap is anything the source docs don't answer that you need answered to make progress.
 Classify it, act, and log it. You never stop the run for a gap.
 
+## Standing decisions come first
+
+Before classifying, check `docs/standing-decisions.md` if it exists. It holds pre-approved,
+program-wide decisions (`SD-NNN` rows): auth model, error envelope, tenancy, money handling —
+policies a human already signed off once so they don't get re-decided per run. A gap covered
+by a standing decision is not open: follow the entry and log it with reversibility `cheap`
+and `--basis "SD-NNN"`, even if the decision would otherwise be `one-way` — the approval
+already happened. Only a gap the file doesn't cover proceeds to classification below.
+
+If the same one-way gap keeps recurring across runs or modules, say so in the entry — that
+is a candidate for promotion to a standing decision, which the human does at approval time.
+
 ## Classify
 
 **Reversible + has an industry default.** Datastore, timestamp format, delete semantics,
