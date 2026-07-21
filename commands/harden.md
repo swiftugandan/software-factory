@@ -1,7 +1,7 @@
 ---
 description: Independent verification pass — adversarial tests, mutation probe, traceability.
 allowed-tools: Task, Read, Write, Edit, Bash, Glob, Grep
-model: fable
+model: opus
 ---
 
 Run the checks the build did not write for itself, before certifying.

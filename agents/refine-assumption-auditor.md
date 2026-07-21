@@ -2,7 +2,7 @@
 name: refine-assumption-auditor
 description: "Reviews the whole assumptions ledger for aggregate drift — whether the set of individually-reasonable decisions still adds up to the product the BDD intended. Runs after refinement and again before certification. Writes docs/assumption-audit.md."
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: fable
+model: opus
 ---
 
 Individually sound assumptions can compose into the wrong product: each faithful to a BDD

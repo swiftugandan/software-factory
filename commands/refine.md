@@ -2,7 +2,7 @@
 description: Run only the refinement phase — PRD, workflows, task plan — from docs/BDD/.
 argument-hint: "[optional scope note]"
 allowed-tools: Task, Read, Write, Edit, Bash, Glob, Grep
-model: fable
+model: opus
 ---
 
 Refine the inputs in `docs/BDD/` without building anything yet. Scope note: $ARGUMENTS
