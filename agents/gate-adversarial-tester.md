@@ -2,7 +2,7 @@
 name: gate-adversarial-tester
 description: "Independent verification. Writes tests from the spec (PRD + workflows) WITHOUT reading the implementation, then runs them against the built code to find behavior the builder's own tests missed. Use before certification. A hook blocks it from reading src/."
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: opus
+model: fable
 skills: assumption-ledger
 ---
 

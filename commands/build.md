@@ -2,7 +2,7 @@
 description: Build from an existing task plan — walk docs/tasks.md through gates.
 argument-hint: "[task id, or blank for all unchecked]"
 allowed-tools: Task, Read, Write, Edit, Bash, Glob, Grep, TodoWrite
-model: opus
+model: fable
 ---
 
 Build against the existing `docs/tasks.md`. Target: $ARGUMENTS (a task id, or all unchecked

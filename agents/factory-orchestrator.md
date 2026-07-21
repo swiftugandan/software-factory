@@ -2,7 +2,7 @@
 name: factory-orchestrator
 description: "Owns the end-to-end run: dispatches refinement, build, and gate subagents in order, tracks docs/tasks.md, and owns the assumptions ledger. Use to run or resume the whole factory from a BDD."
 tools: Task, Read, Write, Edit, Bash, Glob, Grep, TodoWrite
-model: opus
+model: fable
 skills: assumption-ledger
 ---
 

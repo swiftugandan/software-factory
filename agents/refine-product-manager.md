@@ -2,7 +2,7 @@
 name: refine-product-manager
 description: "Turns the BDD and supporting docs in docs/BDD/ into docs/PRD.md with one testable acceptance criterion per behavior. Use first, before any build work. Maps to product/product-manager.md."
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: opus
+model: fable
 skills: assumption-ledger
 ---
 
