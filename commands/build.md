@@ -9,7 +9,11 @@ Build against the existing `docs/tasks.md`. Target: $ARGUMENTS (a task id, or al
 tasks if blank).
 
 Requires `docs/PRD.md`, `docs/workflows.md`, and `docs/tasks.md` to exist — if any is
-missing, run `/refine` first. Ensure `docs/adr/` is populated (dispatch
-`build-software-architect` if empty), then dispatch the build agent each task names, followed
-by `gate-code-reviewer`, `gate-secops`, and `gate-test-automation`. Check off tasks only when
-their PRD criterion has a passing test. Route defects to `fix-minimal-change`.
+missing, run `/refine` first and stop.
+
+Dispatch `factory-orchestrator` scoped to building: skip refinement (the docs exist), start
+from its ADR step, and walk the task list — only the target task and its unchecked
+dependencies when a task id was given. The build loop, per-task gates, check-off rules, and
+bounded defect routing are the orchestrator's own; do not restate or override them here.
+
+When it returns, report: tasks completed, gates run, and any defect loop it stopped with.

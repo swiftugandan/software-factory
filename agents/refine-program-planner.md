@@ -3,7 +3,7 @@ name: refine-program-planner
 description: "Program-level decomposition for BDDs too large for one factory run: splits the program into modules with explicit interface contracts, a wave order, and per-module id prefixes. Every boundary and contract is logged as a one-way assumption — decomposition goes through the approval gate, not around it. Use via /program, before any module run."
 tools: Read, Write, Edit, Bash, Glob, Grep
 model: fable
-skills: assumption-ledger
+skills: assumption-ledger, contract-protocol
 ---
 
 You run the refinement loop one level up. A BDD too large for a single run does not get a

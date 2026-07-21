@@ -23,19 +23,11 @@ current wave should be certified before integrating — if one isn't, finish its
 3. Run `!bash .claude/hooks/program-traceability.sh`. Close any gap it reports — an uncited
    contract, an untested guarantee — before certifying the wave.
 
-Route what fails:
-
-- **Module defect** (a module violates its contract): a new task in that module's
-  `docs/tasks.md`, fixed by `fix-minimal-change` inside that module's run, then re-run the
-  integration suite. Bound the loop as the orchestrator does — two attempts, then stop and
-  report.
-- **Contract defect** (conforming modules disagree, or a guarantee is unimplementable as
-  written): never patched locally, never bent in the test. Dispatch
-  `refine-program-planner` to revise the contract — a new `one-way` ledger row, through
-  `/approve-assumptions` like the original. When the revision is approved: uncheck every
-  module row in `docs/modules.md` citing that contract, add a re-verification task to each
-  affected module (their certification is void — it certified conformance to the old text),
-  and re-run their runs' gates before re-integrating.
+Route what fails per the `contract-protocol` skill — load it before routing anything; it is
+the single owner of the module-defect vs contract-defect classification and of what a
+contract revision entails (planner → approval → void and re-verify every module citing the
+contract). The integration tester and the orchestrator carry the same skill, so all three
+levels route by one policy.
 
 Report: integration tests passing/failing by contract, defects routed (module vs contract),
 program-traceability result, and whether the wave is clear to proceed. A wave is done only

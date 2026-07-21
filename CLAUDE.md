@@ -57,6 +57,11 @@ human can flip them after the run. Read `docs/assumptions.md` before finishing.
 12. Defects loop back through `fix-minimal-change`, never a rewrite
 13. `doc-technical-writer` produces handoff docs from ADRs + ledger
 
+This list is the map, not the spec: the executable version of the pipeline lives in
+`factory-orchestrator` (`.claude/agents/factory-orchestrator.md`), and when the two
+disagree, that file wins. Commands scope the orchestrator; they do not restate its
+procedure.
+
 ## Program mode — BDDs too large for one run
 
 The factory scales recursively, not bigger: never a run larger than a human can review the
