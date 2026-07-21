@@ -10,7 +10,7 @@ set -uo pipefail
 src="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 dest="${1:-.}/.claude/hooks"
 
-helpers="log-assumption.sh approve-assumptions.sh mutation-probe.sh traceability.sh doctor.sh"
+helpers="log-assumption.sh approve-assumptions.sh mutation-probe.sh traceability.sh program-traceability.sh doctor.sh"
 
 mkdir -p "$dest" 2>/dev/null || exit 0
 for h in $helpers; do

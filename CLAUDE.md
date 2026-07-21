@@ -57,6 +57,29 @@ human can flip them after the run. Read `docs/assumptions.md` before finishing.
 12. Defects loop back through `fix-minimal-change`, never a rewrite
 13. `doc-technical-writer` produces handoff docs from ADRs + ledger
 
+This list is the map, not the spec: the executable version of the pipeline lives in
+`factory-orchestrator` (`.claude/agents/factory-orchestrator.md`), and when the two
+disagree, that file wins. Commands scope the orchestrator; they do not restate its
+procedure.
+
+## Program mode — BDDs too large for one run
+
+The factory scales recursively, not bigger: never a run larger than a human can review the
+assumptions of. `/program` runs the same refine → audit → approve → spike loop one level up:
+
+- `refine-program-planner` → `docs/modules.md` (bounded-context modules, wave order,
+  per-module id prefix) + `docs/contracts/NNN-*.md` (testable seam specs). Every boundary
+  and contract is a `one-way` ledger row — decomposition goes through the approval gate.
+- The walking-skeleton spike exercises every seam BEFORE the approval gate (inverting the
+  module pipeline's approve-then-spike order: human attention is the scarce resource, so
+  the human approves boundaries with seam evidence in hand); `build-software-architect`
+  then writes the inherited `docs/adr/program/` tier.
+- Each module is its own factory project (`modules/<name>/` or its own repo) run with the
+  unmodified pipeline, concurrently within a wave, sequentially across waves.
+- After each wave, `/integrate` verifies the composed system against the program BDD and
+  contracts. Contract defects are program-level: revise the contract (new one-way row),
+  re-verify every module citing it — never patch a contract locally inside a module.
+
 ## Conventions the whole factory follows
 
 - Postgres unless the BDD names a datastore. UTC everywhere. Soft deletes for user-owned rows.
@@ -64,10 +87,21 @@ human can flip them after the run. Read `docs/assumptions.md` before finishing.
 - Every irreversible choice lands behind a flag in `config/` or an interface, never inline.
 - Tasks are done when their PRD criterion has a passing test AND the reality checker signs off.
 - Commits reference the task id and PRD criterion. No scope beyond the task in the diff.
+- `docs/standing-decisions.md`, when present, holds pre-approved program-wide decisions
+  (`SD-NNN`). A gap it covers is already decided: follow it, log `cheap` citing the row,
+  never re-raise it for approval.
+- ADRs in `docs/adr/program/` are inherited cross-cutting decisions. Module architects cite
+  them and may narrow but never contradict them — the builders-don't-re-decide rule, one
+  level up.
+- Multi-module programs pin `traceability.idPrefix` per module in that module's
+  `config/factory.json` (`AUTH-`, `BILL-`, …) so criterion ids never collide and per-module
+  traceability can roll up program-wide.
 
 ## What lives where
 
 - `docs/PRD.md`, `docs/workflows.md`, `docs/tasks.md`, `docs/adr/` — refinement outputs
+- `docs/standing-decisions.md` — pre-approved program-wide defaults (optional; scale runs)
+- `docs/adr/program/` — inherited cross-cutting ADRs modules may not re-decide (optional)
 - `spikes/` (throwaway experiments, never imported by src/) and `docs/spikes/` (their findings)
 - `docs/assumptions.md` — the ledger (the deliverable that replaces stakeholder meetings)
 - `docs/run-log.md` — appended by the SubagentStop hook; observability for the run

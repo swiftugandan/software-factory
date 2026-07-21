@@ -6,6 +6,7 @@
       "Bash(./.claude/hooks/log-assumption.sh:*)",
       "Bash(bash .claude/hooks/mutation-probe.sh:*)",
       "Bash(bash .claude/hooks/traceability.sh:*)",
+      "Bash(bash .claude/hooks/program-traceability.sh:*)",
       "Bash(bash .claude/hooks/approve-assumptions.sh:*)",
       "Bash(npm run:*)", "Bash(npm test:*)", "Bash(npm ci:*)", "Bash(npm install:*)",
       "Bash(npx:*)", "Bash(node:*)", "Bash(pytest:*)", "Bash(python -m pytest:*)",
@@ -25,7 +26,8 @@
         "hooks": [
           { "type": "command", "command": "bash .claude/hooks/ledger-guard.sh" },
           { "type": "command", "command": "bash .claude/hooks/approval-guard.sh" },
-          { "type": "command", "command": "bash .claude/hooks/spike-guard.sh" }
+          { "type": "command", "command": "bash .claude/hooks/spike-guard.sh" },
+          { "type": "command", "command": "bash .claude/hooks/program-guard.sh" }
         ] },
       { "matcher": "Read|Grep|Glob",
         "hooks": [ { "type": "command", "command": "bash .claude/hooks/blind-guard.sh" } ] }
