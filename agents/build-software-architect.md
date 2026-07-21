@@ -2,7 +2,7 @@
 name: build-software-architect
 description: "Writes ADRs (docs/adr/NNNN-title.md) that fix stack, structure, and cross-cutting decisions so build agents cite numbers instead of re-deciding. Use once after the task plan, before building. Maps to engineering/engineering-software-architect.md."
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: opus
+model: fable
 skills: assumption-ledger
 ---
 

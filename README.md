@@ -105,8 +105,12 @@ start the pipeline, so installing into an existing repo won't touch it.
 | Defect fixes | `fix-minimal-change` | engineering/engineering-minimal-change-engineer |
 | Handoff docs | `doc-technical-writer` | engineering/engineering-technical-writer |
 
-Model tiers: Opus for orchestration, product, and architecture; Sonnet for builders and
-tests; Haiku for the read-only per-diff gates. Read-only gates carry `disallowedTools:
+Model tiers: Fable (the top intelligence tier) for the two roles where a wrong call
+cascades irreversibly — orchestration and architecture (ADRs the builders never
+re-decide); Opus for the next rung — product refinement, the assumption audit, and
+adversarial testing; Sonnet for builders and tests; Haiku for the read-only per-diff
+gates. Tiers are aliases, not pinned IDs, so each resolves to the current model in
+that tier as new versions ship. Read-only gates carry `disallowedTools:
 Write, Edit` so a reviewer cannot rewrite the thing it is reviewing.
 
 ## What makes it autonomous

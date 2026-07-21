@@ -2,7 +2,7 @@
 description: Run the whole factory from the BDD in docs/BDD/ to certified software.
 argument-hint: "[optional note or focus]"
 allowed-tools: Task, Read, Write, Edit, Bash, Glob, Grep, TodoWrite
-model: opus
+model: fable
 ---
 
 Run the software factory end to end.
