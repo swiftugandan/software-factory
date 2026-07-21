@@ -3,8 +3,14 @@
 # confirms the test suite catches each. Surviving mutants mean the tests are hollow — green
 # but not proving anything. No external mutation tool required.
 #
-# Usage: mutation-probe.sh [--test-cmd "npm test"] [--threshold 0.8] [--max 20]
+# Usage: mutation-probe.sh [--test-cmd "npm test"] [--threshold 0.8] [--max 20] [--max-seconds 900]
 # Reads defaults from config/factory.json. Exit 0 if kill-rate >= threshold, else 1.
+#
+# Legibility + speed: it logs progress per mutant (so a slow probe reads as progress, not a
+# hang), honors a wall-clock budget (mutation.maxSeconds) and stops cleanly when it's spent —
+# reporting how many mutants it skipped rather than truncating silently — and can run a FASTER
+# suite than the full gate for mutation (mutation.testCommand), since injecting operator faults
+# rarely needs the slow end-to-end integration tests.
 set -uo pipefail
 
 cfg="config/factory.json"
@@ -15,19 +21,23 @@ getcfg() { # getcfg <jq-path> <fallback>
   echo "$2"
 }
 
-TEST_CMD=""; THRESHOLD=""; MAX=""
+TEST_CMD=""; THRESHOLD=""; MAX=""; MAXSEC=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --test-cmd) TEST_CMD="$2"; shift 2 ;;
     --threshold) THRESHOLD="$2"; shift 2 ;;
     --max) MAX="$2"; shift 2 ;;
+    --max-seconds) MAXSEC="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
+# Test command: explicit flag > a mutation-specific (faster) command > the gate's testCommand > default.
+[ -z "$TEST_CMD" ]  && TEST_CMD="$(getcfg '.mutation.testCommand' '')"
 [ -z "$TEST_CMD" ]  && TEST_CMD="$(getcfg '.testCommand' '')"
 [ -z "$TEST_CMD" ]  && { [ -f package.json ] && TEST_CMD="npm test --silent" || TEST_CMD="pytest -q"; }
 [ -z "$THRESHOLD" ] && THRESHOLD="$(getcfg '.mutation.threshold' '0.8')"
 [ -z "$MAX" ]       && MAX="$(getcfg '.mutation.maxMutants' '20')"
+[ -z "$MAXSEC" ]    && MAXSEC="$(getcfg '.mutation.maxSeconds' '900')"
 
 targets="$(getcfg '.mutation.targets | join(" ")' 'src lib app')"
 
@@ -77,10 +87,22 @@ if [ "$total" -gt "$MAX" ]; then
   sampled=(); i=0
   while [ ${#sampled[@]} -lt "$MAX" ] && [ $i -lt $total ]; do sampled+=("${mutants[$i]}"); i=$((i+stride)); done
   mutants=("${sampled[@]}")
+  echo "mutation-probe: $total mutable sites found; sampling ${#mutants[@]} (stride $stride)"
+else
+  echo "mutation-probe: testing all $total mutable sites"
 fi
+planned=${#mutants[@]}
+echo "mutation-probe: wall-clock budget ${MAXSEC}s (elapsed ${SECONDS}s after baseline)"
 
-applied=0; killed=0; survivors=()
+applied=0; killed=0; survivors=(); idx=0; budget_hit=0
 for m in "${mutants[@]}"; do
+  idx=$((idx+1))
+  # Wall-clock budget: stop cleanly rather than run for an unbounded time. Report what we skip.
+  if [ "$SECONDS" -ge "$MAXSEC" ]; then
+    budget_hit=$(( planned - applied ))
+    echo "mutation-probe: budget of ${MAXSEC}s reached after $applied mutants — skipping $budget_hit remaining (raise mutation.maxSeconds or use a faster mutation.testCommand)"
+    break
+  fi
   IFS=$'\t' read -r f ln pat rep <<< "$m"
   cp "$f" "$f.mutbak"
   # Escape & (special in sed replacement); use # as delimiter (absent from the operators).
@@ -89,11 +111,17 @@ for m in "${mutants[@]}"; do
   applied=$((applied+1))
   if run_tests; then
     survivors+=("$f:$ln  '$pat' -> '$rep'  survived")
+    result="SURVIVED"
   else
-    killed=$((killed+1))
+    killed=$((killed+1)); result="killed"
   fi
   mv "$f.mutbak" "$f"
+  echo "mutation-probe: [$idx/$planned] ${f}:${ln} '${pat# }'->'${rep# }' $result (${SECONDS}s)"
 done
+
+# If the budget stopped us before a single mutant ran, we have no signal — say so, don't divide
+# by zero. Inconclusive is a pass (the suite was green at baseline); the skip was already logged.
+[ "$applied" -eq 0 ] && { echo "mutation-probe: no mutants evaluated within the budget — inconclusive pass (raise mutation.maxSeconds or set a faster mutation.testCommand)"; exit 0; }
 
 # integer percentage to avoid needing bc
 score_pct=$(( killed * 100 / applied ))

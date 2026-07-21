@@ -149,4 +149,19 @@ Then re-run: with those in place this TinyLink build would have reached `gate-re
 certification on its own, since the underlying software already satisfies the criteria by
 behavior.
 
-*Full raw notes: `evaluation/findings.md`. Hook unit-test harness: `evaluation/hook-tests.sh`.*
+---
+
+## Resolution — fixes applied in this branch
+
+The throwaway TinyLink build was discarded and the findings were addressed in the factory itself.
+All changes are covered by the extended hook harness (now **33/33 passing**).
+
+| Finding | Fix |
+|---|---|
+| **F1** id-scheme mismatch | `traceability.sh` now **auto-detects** the criterion-id prefix from `docs/PRD.md` (most-frequent `[A-Z]{2,}-N`), with a `traceability.idPrefix` config override. A reasonable label choice (`AC-`, `REQ-`) no longer bricks the gate; `PRD-NNN` stays canonical. `refine-product-manager` is stricter about the id contract. Verified against PRD-, AC-, pinned, and both failure cases. |
+| **F1b** no watchdog | `factory-orchestrator` and `fix-minimal-change` now **bound the defect loop**: at most two attempts per defect, then STOP and escalate with the failing output and the minimal fix. `fix-minimal-change` returns `NEEDS-ESCALATION` for out-of-scope structural fixes instead of thrashing. Turns a 7.5-hour silent stall into a minutes-fast hand-back. |
+| **F4** slow/opaque probe | `mutation-probe.sh` now logs **per-mutant progress**, honors a **wall-clock budget** (`mutation.maxSeconds`, default 900) that stops cleanly and reports skipped mutants (no silent truncation, no divide-by-zero), and can use a faster `mutation.testCommand` for mutation runs. |
+| **F2** blank agent names | `run-log.sh` fixed — jq's `//` treated `""` as present; now selects the first non-empty of `agent_type`/`agent_id` with a final `subagent` guard. No more `finished ****`. |
+| **F3** commit-per-task | `factory-orchestrator` now commits each task's diff (best-effort, guarded) when it checks the task off, so history is one reviewable commit per task instead of one heap. |
+
+*Full raw notes: `evaluation/findings.md`. Hook unit-test harness: `evaluation/hook-tests.sh` (33 tests).*

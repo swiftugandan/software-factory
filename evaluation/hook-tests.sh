@@ -140,6 +140,58 @@ EOF
 bash .claude/hooks/mutation-probe.sh --test-cmd "npm test --silent" --threshold 0.8 --max 10 >/tmp/probe-real.log 2>&1
 check "mutation-probe passes assertive test suite" 0 $?
 
+### 9. traceability is scheme-robust (F1 fix): auto-detects the criterion prefix
+rm -rf src tests package.json; mkdir -p docs config
+echo '{"traceability":{"idPrefix":""}}' > config/factory.json
+mkdir -p tests
+# AC-scheme PRD (the scheme that bricked the real run) must now be handled
+printf '# PRD\n- AC-1 a\n- AC-2 b\n' > docs/PRD.md
+printf '# Tasks\n- [ ] T1 (AC-1)\n- [ ] T2 (AC-2)\n' > docs/tasks.md
+printf '// covers AC-1 and AC-2\n' > tests/a.test.js
+bash .claude/hooks/traceability.sh >/dev/null 2>&1
+check "traceability handles AC-scheme (was fatal before fix)" 0 $?
+# PRD-scheme still works
+printf '# PRD\n- PRD-1 a\n- PRD-2 b\n' > docs/PRD.md
+printf '# Tasks\n- [ ] T1 (PRD-1)\n- [ ] T2 (PRD-2)\n' > docs/tasks.md
+printf '// covers PRD-1 and PRD-2\n' > tests/a.test.js
+bash .claude/hooks/traceability.sh >/dev/null 2>&1
+check "traceability still handles canonical PRD-scheme" 0 $?
+# explicit config pin is honored
+printf '# PRD\n- AC-1 a\n' > docs/PRD.md; printf '# Tasks\n- [ ] T1 (AC-1)\n' > docs/tasks.md; printf '// AC-1\n' > tests/a.test.js
+echo '{"traceability":{"idPrefix":"AC"}}' > config/factory.json
+bash .claude/hooks/traceability.sh >/dev/null 2>&1
+check "traceability honors config idPrefix pin" 0 $?
+
+### 10. run-log never logs a blank name (F2 fix)
+rm -f docs/run-log.md
+printf '{"agent_type":""}' | bash .claude/hooks/run-log.sh >/dev/null 2>&1
+printf '{"agent_id":"orch-1"}' | bash .claude/hooks/run-log.sh >/dev/null 2>&1
+printf '{}' | bash .claude/hooks/run-log.sh >/dev/null 2>&1
+blanks=$(grep -c 'finished \*\*\*\*' docs/run-log.md 2>/dev/null || true); blanks="${blanks:-0}"
+[ "$blanks" -eq 0 ] && check "run-log: empty agent_type falls back, no blank entries" 0 0 \
+                    || check "run-log: empty agent_type falls back, no blank entries" 0 1
+grep -q 'finished \*\*orch-1\*\*' docs/run-log.md \
+  && check "run-log: agent_id used when agent_type absent" 0 0 || check "run-log: agent_id used when agent_type absent" 0 1
+
+### 11. mutation-probe wall-clock budget stops cleanly, no divide-by-zero (F4 fix)
+rm -rf src tests; mkdir -p src
+cat > src/calc.js <<'EOF'
+function isAdult(age){ return age >= 18; }
+module.exports={isAdult};
+EOF
+cat > mtest.js <<'EOF'
+const assert=require('assert');const{isAdult}=require('./src/calc');
+assert.strictEqual(isAdult(18),true);assert.strictEqual(isAdult(17),false);
+EOF
+echo '{"mutation":{"threshold":0.8,"targets":["src"],"maxSeconds":900,"testCommand":"node mtest.js"}}' > config/factory.json
+bash .claude/hooks/mutation-probe.sh --max 6 --max-seconds 0 >/tmp/probe-budget.log 2>&1
+check "mutation-probe budget=0 exits cleanly (no divide-by-zero)" 0 $?
+grep -q 'skipping' /tmp/probe-budget.log \
+  && check "mutation-probe reports skipped mutants (no silent cap)" 0 0 || check "mutation-probe reports skipped mutants (no silent cap)" 0 1
+bash .claude/hooks/mutation-probe.sh --max 6 >/tmp/probe-prog.log 2>&1
+grep -qE 'mutation-probe: \[[0-9]+/[0-9]+\]' /tmp/probe-prog.log \
+  && check "mutation-probe logs per-mutant progress" 0 0 || check "mutation-probe logs per-mutant progress" 0 1
+
 echo "==== RESULTS ===="
 printf '%s' "$results"
 echo "================="
